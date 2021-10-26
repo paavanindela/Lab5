@@ -32,15 +32,29 @@ class IP_TRACKER {
     // use LRU to evict old IP trackers
     uint32_t lru;
 
+    // prefetch degree for this IP
+    uint8_t prefetch_degree;
+
     IP_TRACKER () {
         ip = 0;
         last_cl_addr = 0;
         last_stride = 0;
         lru = 0;
+        prefetch_degree = PREFETCH_DEGREE;
     };
 };
 
 IP_TRACKER trackers[IP_TRACKER_COUNT];
+
+void CACHE::l2c_prefetch_throttle(uint64_t ip,int index){
+    if(index !=-1 && index!= IP_TRACKER_COUNT && pf_issued > 0){
+        int p_counter = (THRESHOLD*pf_useful)/(pf_issued);
+        if(p_counter < pf_counter && trackers[index].prefetch_degree > 1)
+            trackers[index].prefetch_degree--;
+        if(p_counter > pf_counter)
+            trackers[index].prefetch_degree++;
+    }
+}
 
 void CACHE::l2c_prefetcher_initialize() 
 {
@@ -79,7 +93,7 @@ uint32_t CACHE::l2c_prefetcher_operate(uint64_t addr, uint64_t ip, uint8_t cache
                 trackers[i].lru++;
         }
         trackers[index].lru = 0;
-
+        //trackers[index].prefetch_degree = pf_counter+1;
         return metadata_in;
     }
 
@@ -87,6 +101,8 @@ uint32_t CACHE::l2c_prefetcher_operate(uint64_t addr, uint64_t ip, uint8_t cache
     // at this point we should know a matching tracker index
     if (index == -1)
         assert(0);
+
+    l2c_prefetch_throttle(ip,index);
 
     // calculate the stride between the current address and the last address
     // this bit appears overly complicated because we're calculating

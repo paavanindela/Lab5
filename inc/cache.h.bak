@@ -7,7 +7,7 @@
 extern uint32_t PAGE_TABLE_LATENCY, SWAP_LATENCY;
 
 #define NUMBER 512
-#define THRESHOLD 1
+#define THRESHOLD 11
 
 // CACHE TYPE
 #define IS_ITLB 0
