@@ -48,11 +48,21 @@ IP_TRACKER l1d_trackers[IP_TRACKER_COUNT];
 
 void CACHE::l1d_prefetch_throttle(uint64_t ip,int index){
     if(index !=-1 && index!= IP_TRACKER_COUNT && (pf_useful+pf_useless) > 0){
-        int p_counter = (THRESHOLD*pf_useful)/(pf_useful+pf_useless);
-        if(p_counter < pf_counter && l1d_trackers[index].prefetch_degree > 1)
-            l1d_trackers[index].prefetch_degree--;
-        if(p_counter > pf_counter)
-            l1d_trackers[index].prefetch_degree++;
+        if(pf_counter<=1){ // VERY CONSERVATIVE
+          l1d_trackers[index].prefetch_degree = 1;
+        }
+        if(pf_counter==2){ // CONSERVATIVE
+          l1d_trackers[index].prefetch_degree = 2;
+        }
+        if(pf_counter==3){ // MIDDLE OF THE ROAD
+          l1d_trackers[index].prefetch_degree = 3;
+        }
+        if(pf_counter==4){ // AGGRESSIVE
+          l1d_trackers[index].prefetch_degree = 5;
+        }
+        if(pf_counter==5){ // VERY AGGRESSIVE
+          l1d_trackers[index].prefetch_degree = 7;
+        }
     }
 }
 
@@ -93,7 +103,7 @@ void CACHE::l1d_prefetcher_operate(uint64_t addr, uint64_t ip, uint8_t cache_hit
                 l1d_trackers[i].lru++;
         }
         l1d_trackers[index].lru = 0;
-        //l1d_trackers[index].prefetch_degree = pf_counter+1;
+        l1d_trackers[index].prefetch_degree = 3;
         return ;
     }
 
@@ -170,4 +180,5 @@ void CACHE::l1d_prefetcher_final_stats()
     }
     cout << "L1D PREFETCHER ACCURACY " << setw(10) << (1.0*pf_useful)/(pf_useful+pf_useless) << endl;
     cout << "L1D PREFETCHER COVERAGE " << setw(10) << (1.0*pf_useful)/(TOTAL_MISS) << endl;
+    cout << "L1D PREFETCHER LATE " << setw(10)  << pf_late << endl;
 }

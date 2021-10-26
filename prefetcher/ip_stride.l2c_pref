@@ -48,11 +48,21 @@ IP_TRACKER trackers[IP_TRACKER_COUNT];
 
 void CACHE::l2c_prefetch_throttle(uint64_t ip,int index){
     if(index !=-1 && index!= IP_TRACKER_COUNT &&  (pf_useful+pf_useless) > 0){
-        int p_counter = (THRESHOLD*pf_useful)/ (pf_useful+pf_useless);
-        if(p_counter < pf_counter && trackers[index].prefetch_degree > 1)
-            trackers[index].prefetch_degree--;
-        if(p_counter > pf_counter)
-            trackers[index].prefetch_degree++;
+        if(pf_counter<=1){ // VERY CONSERVATIVE
+          trackers[index].prefetch_degree = 1;
+        }
+        if(pf_counter==2){ // CONSERVATIVE
+          trackers[index].prefetch_degree = 2;
+        }
+        if(pf_counter==3){ // MIDDLE OF THE ROAD
+          trackers[index].prefetch_degree = 3;
+        }
+        if(pf_counter==4){ // AGGRESSIVE
+          trackers[index].prefetch_degree = 5;
+        }
+        if(pf_counter==5){ // VERY AGGRESSIVE
+          trackers[index].prefetch_degree = 7;
+        }
     }
 }
 
@@ -93,7 +103,7 @@ uint32_t CACHE::l2c_prefetcher_operate(uint64_t addr, uint64_t ip, uint8_t cache
                 trackers[i].lru++;
         }
         trackers[index].lru = 0;
-        //trackers[index].prefetch_degree = pf_counter+1;
+        trackers[index].prefetch_degree = 3;
         return metadata_in;
     }
 
@@ -169,4 +179,5 @@ void CACHE::l2c_prefetcher_final_stats()
     }
     cout << "L2C PREFETCHER ACCURACY " << setw(10) << (1.0*pf_useful)/(pf_useful+pf_useless) << endl;
     cout << "L2C PREFETCHER COVERAGE " << setw(10) << (1.0*pf_useful)/(TOTAL_MISS) << endl;
+    cout << "L2C PREFETCHER LATE " << setw(10)  << pf_late << endl;
 }

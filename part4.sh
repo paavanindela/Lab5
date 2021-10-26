@@ -1,8 +1,8 @@
 #!/bin/bash
 
-if [ "$#" -ne 8 ]; then
+if [ "$#" -ne 9 ]; then
     echo "Illegal number of parameters"
-    echo "Usage: ./build.sh [branch_pred] [l1d_pref] [l2c_pref] [llc_pref] [llc_repl] [num_core] [threshold]"
+    echo "Usage: ./build.sh [branch_pred] [l1d_pref] [l2c_pref] [llc_pref] [llc_repl] [num_core] [high] [low]"
     exit 1
 fi
 
@@ -14,7 +14,8 @@ L2C_PREFETCHER=$4   # prefetcher/*.l2c_pref
 LLC_PREFETCHER=$5   # prefetcher/*.llc_pref
 LLC_REPLACEMENT=$6  # replacement/*.llc_repl
 NUM_CORE=$7         # tested up to 8-core system
-THRESHOLD=$8        # threshold
+HIGH=$8             # HIGH
+LOW=$9              # LOW
 
 ############## Some useful macros ###############
 BOLD=$(tput bold)
@@ -22,8 +23,8 @@ NORMAL=$(tput sgr0)
 #################################################
 
 # Change the threshold
-sed -i.bak 's/\<THRESHOLD 1\>/THRESHOLD '${THRESHOLD}'/g' inc/cache.h
-
+sed -i.bak 's/\<AC_HIGH 0\>/AC_HIGH '${HIGH}'/g' inc/cache.h
+sed -i.bak 's/\<AC_LOW 0\>/AC_LOW '${LOW}'/g' inc/cache.h
 # Sanity check
 if [ ! -f ./branch/${BRANCH}.bpred ]; then
     echo "[ERROR] Cannot find branch predictor"
@@ -121,7 +122,7 @@ echo "LLC Prefetcher: ${LLC_PREFETCHER}"
 echo "LLC Replacement: ${LLC_REPLACEMENT}"
 echo "Cores: ${NUM_CORE}"
 echo "Threshold: ${THRESHOLD}"
-BINARY_NAME="${BRANCH}-${L1I_PREFETCHER}-${L1D_PREFETCHER}-${L2C_PREFETCHER}-${LLC_PREFETCHER}-${LLC_REPLACEMENT}-${NUM_CORE}core-th-${THRESHOLD}"
+BINARY_NAME="high-${HIGH}-low-${LOW}"
 echo "Binary: bin/${BINARY_NAME}"
 echo ""
 mv bin/champsim bin/${BINARY_NAME}
@@ -129,7 +130,8 @@ mv bin/champsim bin/${BINARY_NAME}
 
 # Restore to the default configuration
 sed -i.bak 's/\<NUM_CPUS '${NUM_CORE}'\>/NUM_CPUS 1/g' inc/champsim.h
-sed -i.bak 's/\<THRESHOLD '${THRESHOLD}'\>/THRESHOLD 1/g' inc/cache.h
+sed -i.bak 's/\<AC_HIGH '${HIGH}'\>/AC_HIGH 0/g' inc/cache.h
+sed -i.bak 's/\<AC_LOW '${LOW}'\>/AC_LOW 0/g' inc/cache.h
 #sed -i.bak 's/\<DRAM_CHANNELS 2\>/DRAM_CHANNELS 1/g' inc/champsim.h
 #sed -i.bak 's/\<DRAM_CHANNELS_LOG2 1\>/DRAM_CHANNELS_LOG2 0/g' inc/champsim.h
 

@@ -1386,6 +1386,35 @@ int CACHE::add_wq(PACKET *packet)
     return -1;
 }
 
+void CACHE::update_counter(){
+  float pf_accuracy = 0,pf_lateness=0,pf_pollution=0;
+  if(pf_useful+pf_useless > 0)
+    pf_accuracy = (1.0*pf_useful)/ (pf_useful+pf_useless);
+  if(pf_useful>0)
+    pf_lateness = (1.0*pf_late)/ (pf_useful);
+  if(pf_accuracy>AC_HIGH && pf_lateness>LATE){ // HIGH AND LATE
+    pf_counter++; // INCREMENT (to increase timeliness)
+  }
+  if(pf_accuracy>AC_HIGH && pf_lateness<=LATE){ // HIGH AND NOT LATE
+    pf_counter = pf_counter; // NO CHANGE (best case)
+  }
+  if(pf_accuracy>AC_LOW && pf_accuracy<=AC_HIGH && pf_lateness>LATE){ // MEDIUM AND LATE
+    pf_counter++; // INCREMENT (to increase timeliness)
+  }
+  if(pf_accuracy>AC_LOW && pf_accuracy<=AC_HIGH && pf_lateness<=LATE){ // MEDIUM AND NOT LATE
+    pf_counter--; // DECREMENT (to save bandwidth)
+  }
+  if(pf_accuracy<=AC_LOW){ // LOW
+    pf_counter--; // DECREMENT (to save bandwidth)
+  }
+  if(pf_counter<1){
+    pf_counter == 0;
+  }
+  if(pf_counter > THRESHOLD) {
+    pf_counter = THRESHOLD;
+  }
+}
+
 int CACHE::prefetch_line(uint64_t ip, uint64_t base_addr, uint64_t pf_addr, int pf_fill_level, uint32_t prefetch_metadata)
 {
     pf_requested++;
@@ -1411,13 +1440,16 @@ int CACHE::prefetch_line(uint64_t ip, uint64_t base_addr, uint64_t pf_addr, int 
             pf_packet.ip = ip;
             pf_packet.type = PREFETCH;
             pf_packet.event_cycle = current_core_cycle[cpu];
-
+            
+            if( MSHR.check_queue(&pf_packet) !=-1){ // PREFETCH LATE
+              pf_late++;
+            }
             // give a dummy 0 as the IP of a prefetch
             add_pq(&pf_packet);
-
+            update_counter();
             pf_issued++;
-            if(pf_issued%NUMBER == 0 &&  (pf_useful+pf_useless) > 0){
-              pf_counter = (THRESHOLD*pf_useful)/ (pf_useful+pf_useless);
+            if(pf_issued%NUMBER == 0){
+              pf_counter = 3; // RESET TO MIDDLE OF THE ROAD CONFIGURATION
             }
             return 1;
         }

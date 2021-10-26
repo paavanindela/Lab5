@@ -12,12 +12,12 @@ CPU 0 runs ./traces//trace.champsimtrace.xz
 CPU 0 Bimodal branch predictor
 CPU 0 L1D IP-based stride prefetcher
 CPU 0 L2C IP-based stride prefetcher
-Heartbeat CPU 0 instructions: 10000001 cycles: 4426007 heartbeat IPC: 2.25937 cumulative IPC: 2.25937 (Simulation time: 0 hr 0 min 28 sec) 
+Heartbeat CPU 0 instructions: 10000001 cycles: 4426007 heartbeat IPC: 2.25937 cumulative IPC: 2.25937 (Simulation time: 0 hr 0 min 30 sec) 
 
-Warmup complete CPU 0 instructions: 10000001 cycles: 4426007 (Simulation time: 0 hr 0 min 28 sec) 
+Warmup complete CPU 0 instructions: 10000001 cycles: 4426007 (Simulation time: 0 hr 0 min 30 sec) 
 
-Heartbeat CPU 0 instructions: 20000003 cycles: 51334813 heartbeat IPC: 0.21318 cumulative IPC: 0.21318 (Simulation time: 0 hr 1 min 16 sec) 
-Finished CPU 0 instructions: 10000002 cycles: 46908806 cumulative IPC: 0.21318 (Simulation time: 0 hr 1 min 16 sec) 
+Heartbeat CPU 0 instructions: 20000003 cycles: 51334813 heartbeat IPC: 0.21318 cumulative IPC: 0.21318 (Simulation time: 0 hr 1 min 18 sec) 
+Finished CPU 0 instructions: 10000002 cycles: 46908806 cumulative IPC: 0.21318 (Simulation time: 0 hr 1 min 18 sec) 
 
 ChampSim completed all CPUs
 
@@ -54,7 +54,13 @@ LLC PREFETCH  REQUESTED:          0  ISSUED:          0  USEFUL:      10933  USE
 LLC AVERAGE MISS LATENCY: 150.088 cycles
 Major fault: 0 Minor fault: 2836
 CPU 0 L1D PC-based stride prefetcher final stats
+L1D PREFETCHER ACCURACY   0.707566
+L1D PREFETCHER COVERAGE   0.224689
+L1D PREFETCHER LATE      44384
 CPU 0 L2C PC-based stride prefetcher final stats
+L2C PREFETCHER ACCURACY   0.172458
+L2C PREFETCHER COVERAGE  0.0898242
+L2C PREFETCHER LATE      11014
 
 DRAM Statistics
  CHANNEL 0
