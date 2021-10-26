@@ -47,8 +47,8 @@ class IP_TRACKER {
 IP_TRACKER trackers[IP_TRACKER_COUNT];
 
 void CACHE::l2c_prefetch_throttle(uint64_t ip,int index){
-    if(index !=-1 && index!= IP_TRACKER_COUNT && pf_issued > 0){
-        int p_counter = (THRESHOLD*pf_useful)/(pf_issued);
+    if(index !=-1 && index!= IP_TRACKER_COUNT &&  (pf_useful+pf_useless) > 0){
+        int p_counter = (THRESHOLD*pf_useful)/ (pf_useful+pf_useless);
         if(p_counter < pf_counter && trackers[index].prefetch_degree > 1)
             trackers[index].prefetch_degree--;
         if(p_counter > pf_counter)
@@ -162,4 +162,11 @@ uint32_t CACHE::l2c_prefetcher_cache_fill(uint64_t addr, uint32_t set, uint32_t 
 void CACHE::l2c_prefetcher_final_stats()
 {
     cout << "CPU " << cpu << " L2C PC-based stride prefetcher final stats" << endl;
+    uint64_t TOTAL_MISS = 0;
+
+    for (uint32_t i=0; i<NUM_TYPES; i++) {
+        TOTAL_MISS += sim_miss[cpu][i];
+    }
+    cout << "L2C PREFETCHER ACCURACY " << setw(10) << (1.0*pf_useful)/(pf_useful+pf_useless) << endl;
+    cout << "L2C PREFETCHER COVERAGE " << setw(10) << (1.0*pf_useful)/(TOTAL_MISS) << endl;
 }

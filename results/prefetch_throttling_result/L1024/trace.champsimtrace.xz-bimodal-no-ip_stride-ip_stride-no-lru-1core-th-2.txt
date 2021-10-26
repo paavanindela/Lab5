@@ -12,12 +12,12 @@ CPU 0 runs ./traces//trace.champsimtrace.xz
 CPU 0 Bimodal branch predictor
 CPU 0 L1D IP-based stride prefetcher
 CPU 0 L2C IP-based stride prefetcher
-Heartbeat CPU 0 instructions: 10000001 cycles: 4423492 heartbeat IPC: 2.26066 cumulative IPC: 2.26066 (Simulation time: 0 hr 2 min 8 sec) 
+Heartbeat CPU 0 instructions: 10000001 cycles: 4423495 heartbeat IPC: 2.26066 cumulative IPC: 2.26066 (Simulation time: 0 hr 2 min 2 sec) 
 
-Warmup complete CPU 0 instructions: 10000001 cycles: 4423492 (Simulation time: 0 hr 2 min 8 sec) 
+Warmup complete CPU 0 instructions: 10000001 cycles: 4423495 (Simulation time: 0 hr 2 min 2 sec) 
 
-Heartbeat CPU 0 instructions: 20000000 cycles: 45631615 heartbeat IPC: 0.242671 cumulative IPC: 0.242671 (Simulation time: 0 hr 5 min 42 sec) 
-Finished CPU 0 instructions: 10000003 cycles: 41208124 cumulative IPC: 0.242671 (Simulation time: 0 hr 5 min 42 sec) 
+Heartbeat CPU 0 instructions: 20000000 cycles: 45631618 heartbeat IPC: 0.242671 cumulative IPC: 0.242671 (Simulation time: 0 hr 5 min 27 sec) 
+Finished CPU 0 instructions: 10000003 cycles: 41208124 cumulative IPC: 0.242671 (Simulation time: 0 hr 5 min 27 sec) 
 
 ChampSim completed all CPUs
 
@@ -29,7 +29,7 @@ L1D LOAD      ACCESS:    3282961  HIT:    2283209  MISS:     999752
 L1D RFO       ACCESS:     549236  HIT:     517198  MISS:      32038
 L1D PREFETCH  ACCESS:    2101161  HIT:    1331541  MISS:     769620
 L1D WRITEBACK ACCESS:          0  HIT:          0  MISS:          0
-L1D PREFETCH  REQUESTED:    9756887  ISSUED:    2849974  USEFUL:     498436  USELESS:     271286
+L1D PREFETCH  REQUESTED:    9930573  ISSUED:    2849974  USEFUL:     498436  USELESS:     271286
 L1D AVERAGE MISS LATENCY: 134.776 cycles
 L1I TOTAL     ACCESS:    2386165  HIT:    2386165  MISS:          0
 L1I LOAD      ACCESS:    2386165  HIT:    2386165  MISS:          0
@@ -54,7 +54,11 @@ LLC PREFETCH  REQUESTED:          0  ISSUED:          0  USEFUL:      42560  USE
 LLC AVERAGE MISS LATENCY: 168.697 cycles
 Major fault: 0 Minor fault: 2836
 CPU 0 L1D PC-based stride prefetcher final stats
+L1D PREFETCHER ACCURACY   0.647553
+L1D PREFETCHER COVERAGE   0.276692
 CPU 0 L2C PC-based stride prefetcher final stats
+L2C PREFETCHER ACCURACY   0.203408
+L2C PREFETCHER COVERAGE   0.126953
 
 DRAM Statistics
  CHANNEL 0

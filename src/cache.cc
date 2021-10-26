@@ -1416,8 +1416,8 @@ int CACHE::prefetch_line(uint64_t ip, uint64_t base_addr, uint64_t pf_addr, int 
             add_pq(&pf_packet);
 
             pf_issued++;
-            if(pf_issued%NUMBER == 0 && pf_issued > 0){
-              pf_counter = (THRESHOLD*pf_useful)/(pf_issued);
+            if(pf_issued%NUMBER == 0 &&  (pf_useful+pf_useless) > 0){
+              pf_counter = (THRESHOLD*pf_useful)/ (pf_useful+pf_useless);
             }
             return 1;
         }
