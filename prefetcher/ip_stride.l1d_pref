@@ -35,34 +35,56 @@ class IP_TRACKER {
     // prefetch degree for this IP
     uint8_t prefetch_degree;
 
+    int useful,useless;
+
     IP_TRACKER () {
         ip = 0;
         last_cl_addr = 0;
         last_stride = 0;
         lru = 0;
         prefetch_degree = PREFETCH_DEGREE;
+        useful = 0;
+        useless = 0;
     };
 };
 
 IP_TRACKER l1d_trackers[IP_TRACKER_COUNT];
 
 void CACHE::l1d_prefetch_throttle(uint64_t ip,int index){
-    if(index !=-1 && index!= IP_TRACKER_COUNT && (pf_useful+pf_useless) > 0){
-        if(pf_counter<=1){ // VERY CONSERVATIVE
-          l1d_trackers[index].prefetch_degree = 1;
+    if(index !=-1 && index!= IP_TRACKER_COUNT && (l1d_trackers[index].useful+l1d_trackers[index].useless) > 0){
+        float accuracy = (1.0*l1d_trackers[index].useful)/(l1d_trackers[index].useful+l1d_trackers[index].useless);
+        if(accuracy >= AC_HIGH){
+            l1d_trackers[index].prefetch_degree++;
         }
-        if(pf_counter==2){ // CONSERVATIVE
-          l1d_trackers[index].prefetch_degree = 2;
+        if(accuracy < AC_HIGH && accuracy >=AC_LOW){
+            l1d_trackers[index].prefetch_degree;  
         }
-        if(pf_counter==3){ // MIDDLE OF THE ROAD
-          l1d_trackers[index].prefetch_degree = 3;
+        if(accuracy < AC_LOW){
+            l1d_trackers[index].prefetch_degree--; 
         }
-        if(pf_counter==4){ // AGGRESSIVE
-          l1d_trackers[index].prefetch_degree = 5;
+        if(l1d_trackers[index].prefetch_degree<=0) {
+            l1d_trackers[index].prefetch_degree = 1;
         }
-        if(pf_counter==5){ // VERY AGGRESSIVE
-          l1d_trackers[index].prefetch_degree = 7;
+        if(l1d_trackers[index].prefetch_degree>THRESHOLD){
+            l1d_trackers[index].prefetch_degree = THRESHOLD;
         }
+    }
+}
+
+void CACHE::l1d_prefetch_update(uint64_t ip,int type){
+    int index = -1;
+    for (index=0; index<IP_TRACKER_COUNT; index++) {
+        if (l1d_trackers[index].ip == ip)
+            break;
+    }
+    if(index !=-1 && index!= IP_TRACKER_COUNT){
+        if(type==0){
+            l1d_trackers[index].useful++;
+        }
+        if(type==1){
+            l1d_trackers[index].useless++;
+        }
+        l1d_prefetch_throttle(ip,index);
     }
 }
 
@@ -111,8 +133,6 @@ void CACHE::l1d_prefetcher_operate(uint64_t addr, uint64_t ip, uint8_t cache_hit
     // at this point we should know a matching tracker index
     if (index == -1)
         assert(0);
-
-    l1d_prefetch_throttle(ip,index);
 
     // calculate the stride between the current address and the last address
     // this bit appears overly complicated because we're calculating

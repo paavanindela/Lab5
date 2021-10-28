@@ -6,11 +6,9 @@
 // PAGE
 extern uint32_t PAGE_TABLE_LATENCY, SWAP_LATENCY;
 
-#define NUMBER 512
-#define THRESHOLD 5
+#define THRESHOLD 7
 #define AC_HIGH 0
 #define AC_LOW 0
-#define LATE 0.01
 
 // CACHE TYPE
 #define IS_ITLB 0
@@ -101,7 +99,6 @@ class CACHE : public MEMORY {
              pf_issued,
              pf_useful,
              pf_useless,
-             pf_counter,        // A saturating Dynamic Configuration Counter
              pf_late,
              pf_fill;
 
@@ -164,7 +161,6 @@ class CACHE : public MEMORY {
         pf_useful = 0;
         pf_useless = 0;
         pf_fill = 0;
-        pf_counter = 3;
         pf_late = 0;
     };
 
@@ -196,8 +192,7 @@ class CACHE : public MEMORY {
     void handle_fill(),
          handle_writeback(),
          handle_read(),
-         handle_prefetch(),
-         update_counter();
+         handle_prefetch();
 
     void add_mshr(PACKET *packet),
          update_fill_cycle(),
@@ -221,7 +216,9 @@ class CACHE : public MEMORY {
          l2c_prefetcher_final_stats(),
          llc_prefetcher_final_stats(),
          l1d_prefetch_throttle(uint64_t ip,int index),
-         l2c_prefetch_throttle(uint64_t ip,int index);
+         l2c_prefetch_throttle(uint64_t ip,int index),
+         l1d_prefetch_update(uint64_t ip,int type),
+         l2c_prefetch_update(uint64_t ip,int type);
     void (*l1i_prefetcher_cache_operate)(uint32_t, uint64_t, uint8_t, uint8_t);
     void (*l1i_prefetcher_cache_fill)(uint32_t, uint64_t, uint32_t, uint32_t, uint8_t, uint64_t);
 

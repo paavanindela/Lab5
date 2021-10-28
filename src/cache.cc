@@ -615,6 +615,14 @@ void CACHE::handle_read()
 
                 // update prefetch stats and reset prefetch bit
                 if (block[set][way].prefetch) {
+                  if(AC_HIGH!=0 || AC_LOW!=0){
+                    if(cache_type==IS_L1D){
+                      l1d_prefetch_update(RQ.entry[index].ip,0);
+                    }
+                    if(cache_type==IS_L2C){
+                      l2c_prefetch_update(RQ.entry[index].ip,0);
+                    }
+                  }
                     pf_useful++;
                     block[set][way].prefetch = 0;
                 }
@@ -1086,8 +1094,17 @@ void CACHE::fill_cache(uint32_t set, uint32_t way, PACKET *packet)
             assert(0);
     }
 #endif
-    if (block[set][way].prefetch && (block[set][way].used == 0))
+    if (block[set][way].prefetch && (block[set][way].used == 0)){
+      if(AC_HIGH != 0 || AC_LOW != 0){
+        if(cache_type==IS_L1D){
+          l1d_prefetch_update(packet->ip,1);
+        }
+        if(cache_type==IS_L2C){
+          l2c_prefetch_update(packet->ip,1);
+        }
+      }
         pf_useless++;
+    }
 
     if (block[set][way].valid == 0)
         block[set][way].valid = 1;
@@ -1386,35 +1403,6 @@ int CACHE::add_wq(PACKET *packet)
     return -1;
 }
 
-void CACHE::update_counter(){
-  float pf_accuracy = 0,pf_lateness=0,pf_pollution=0;
-  if(pf_useful+pf_useless > 0)
-    pf_accuracy = (1.0*pf_useful)/ (pf_useful+pf_useless);
-  if(pf_useful>0)
-    pf_lateness = (1.0*pf_late)/ (pf_useful);
-  if(pf_accuracy>AC_HIGH && pf_lateness>LATE){ // HIGH AND LATE
-    pf_counter++; // INCREMENT (to increase timeliness)
-  }
-  if(pf_accuracy>AC_HIGH && pf_lateness<=LATE){ // HIGH AND NOT LATE
-    pf_counter = pf_counter; // NO CHANGE (best case)
-  }
-  if(pf_accuracy>AC_LOW && pf_accuracy<=AC_HIGH && pf_lateness>LATE){ // MEDIUM AND LATE
-    pf_counter++; // INCREMENT (to increase timeliness)
-  }
-  if(pf_accuracy>AC_LOW && pf_accuracy<=AC_HIGH && pf_lateness<=LATE){ // MEDIUM AND NOT LATE
-    pf_counter--; // DECREMENT (to save bandwidth)
-  }
-  if(pf_accuracy<=AC_LOW){ // LOW
-    pf_counter--; // DECREMENT (to save bandwidth)
-  }
-  if(pf_counter<1){
-    pf_counter == 0;
-  }
-  if(pf_counter > THRESHOLD) {
-    pf_counter = THRESHOLD;
-  }
-}
-
 int CACHE::prefetch_line(uint64_t ip, uint64_t base_addr, uint64_t pf_addr, int pf_fill_level, uint32_t prefetch_metadata)
 {
     pf_requested++;
@@ -1446,11 +1434,7 @@ int CACHE::prefetch_line(uint64_t ip, uint64_t base_addr, uint64_t pf_addr, int 
             }
             // give a dummy 0 as the IP of a prefetch
             add_pq(&pf_packet);
-            update_counter();
             pf_issued++;
-            if(pf_issued%NUMBER == 0){
-              pf_counter = 3; // RESET TO MIDDLE OF THE ROAD CONFIGURATION
-            }
             return 1;
         }
     }

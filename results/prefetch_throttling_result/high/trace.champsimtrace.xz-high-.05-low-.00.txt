@@ -16,8 +16,8 @@ Heartbeat CPU 0 instructions: 10000002 cycles: 4422202 heartbeat IPC: 2.26132 cu
 
 Warmup complete CPU 0 instructions: 10000002 cycles: 4422202 (Simulation time: 0 hr 2 min 6 sec) 
 
-Heartbeat CPU 0 instructions: 20000003 cycles: 45685396 heartbeat IPC: 0.242347 cumulative IPC: 0.242347 (Simulation time: 0 hr 5 min 25 sec) 
-Finished CPU 0 instructions: 10000001 cycles: 41263194 cumulative IPC: 0.242347 (Simulation time: 0 hr 5 min 25 sec) 
+Heartbeat CPU 0 instructions: 20000003 cycles: 45685396 heartbeat IPC: 0.242347 cumulative IPC: 0.242347 (Simulation time: 0 hr 5 min 24 sec) 
+Finished CPU 0 instructions: 10000001 cycles: 41263194 cumulative IPC: 0.242347 (Simulation time: 0 hr 5 min 24 sec) 
 
 ChampSim completed all CPUs
 
@@ -56,7 +56,7 @@ Major fault: 0 Minor fault: 2836
 CPU 0 L1D PC-based stride prefetcher final stats
 L1D PREFETCHER ACCURACY   0.630247
 L1D PREFETCHER COVERAGE   0.259518
-L1D PREFETCHER LATE      56660
+L1D PREFETCHER LATE      56517
 CPU 0 L2C PC-based stride prefetcher final stats
 L2C PREFETCHER ACCURACY   0.216855
 L2C PREFETCHER COVERAGE   0.134746

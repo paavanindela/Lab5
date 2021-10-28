@@ -56,6 +56,7 @@ if [ "$1" -eq 3 ]; then
         echo "GENERATING bin $i" 
             l=$(echo "$i * 0.1 - 0.05" | bc)
             $(./part4.sh  bimodal no ip_stride ip_stride no lru 1 1. $l >/dev/null)
+            $(sed -i.bak 's/AC_HIGH 1./AC_HIGH 0/g' inc/cache.h)
     done
     ./run_champsim.sh high-1.-low-.05 10 10 trace.champsimtrace.xz &\
     ./run_champsim.sh high-1.-low-.15 10 10 trace.champsimtrace.xz &\
