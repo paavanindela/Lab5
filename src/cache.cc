@@ -51,11 +51,11 @@ bool CACHE::llc_bypass(uint64_t ip, uint64_t cache_line){
         if(index==TABLE_SIZE){ // ENTRY NOT PRESENT IN PRED_TABLE
           int assign = -1;
           for(assign=0;assign<TABLE_SIZE;assign++){
-            if(PRED_TABLE[assign].entry<=0){
+            if(PRED_TABLE[assign].entry<=0){ // ASSIGN A NEW ENTRY 
               break;
             }
           }
-          if(assign!=TABLE_SIZE){
+          if(assign!=TABLE_SIZE){ // UPDATE THE PRED TABLE AND TRACKER SET
             PRED_TABLE[assign].cnt = BYPASS_THRESHOLD -1 ;
             PRED_TABLE[assign].entry = 1;
             PRED_TABLE[assign].ip = ip;
@@ -73,6 +73,10 @@ bool CACHE::llc_bypass(uint64_t ip, uint64_t cache_line){
               return true;
             }
           }
+        }
+        else{ // NEW CACHE LINE ASSOCIATION
+          if(PRED_TABLE[index].entry<2*POLICY_THRESHOLD-1 && TRACKSET[set].cache_line!=cache_line) // 9 BIT COUNTER
+            PRED_TABLE[index].entry++;
         }
       } 
     }
@@ -107,12 +111,10 @@ void CACHE::pred_table_update(uint64_t ip,int set, int type){
     }
     if(type==1){
       if(PRED_TABLE[index].cnt < 2*BYPASS_THRESHOLD-1)
-        PRED_TABLE[index].cnt++; //MISS, INCREMENT 
+        PRED_TABLE[index].cnt++; //INCREMENT COUNTER
       if(pol<2*POLICY_THRESHOLD-1)
         pol++;
     }
-    if(PRED_TABLE[index].entry<2*POLICY_THRESHOLD-1) // 9 BIT COUNTER
-      PRED_TABLE[index].entry++;
     // printf("%d,%d\n",ip,PRED_TABLE[index].cnt);
   }
 }
@@ -142,7 +144,7 @@ void CACHE::handle_fill()
             way = find_victim(fill_cpu, MSHR.entry[mshr_index].instr_id, set, block[set], MSHR.entry[mshr_index].ip, MSHR.entry[mshr_index].full_addr, MSHR.entry[mshr_index].type);
 
         if (LLC_BYPASS==1 &&( ((cache_type == IS_LLC) && llc_bypass(MSHR.entry[mshr_index].ip,MSHR.entry[mshr_index].address)) || (way == LLC_WAY))) { // this is a bypass that does not fill the LLC
-
+          // LLC BYPASS IMPLEMENTED HERE PREVIOUSLY
             // update replacement policy
             if (cache_type == IS_LLC) {
                 llc_update_replacement_state(fill_cpu, set, way, MSHR.entry[mshr_index].full_addr, MSHR.entry[mshr_index].ip, 0, MSHR.entry[mshr_index].type, 0);
@@ -225,11 +227,12 @@ void CACHE::handle_fill()
                     writeback_packet.event_cycle = current_core_cycle[fill_cpu];
 
                     lower_level->add_wq(&writeback_packet);
-                    if(set<TRACKER_SIZE && cache_type==IS_LLC){ // UPDATE ENTRIES 
+                    if(set<TRACKER_SIZE && cache_type==IS_LLC){ // UPDATE ENTRIES ASSOCIATION OF PRED TABLE ENTRY 
                       if(PRED_TABLE[TRACKSET[set].index].entry>0){
                         PRED_TABLE[TRACKSET[set].index].entry--;
                         // printf("%d\n",PRED_TABLE[TRACKSET[set].index].ip);
                       }
+                      pred_table_update(MSHR.entry[mshr_index].ip,set,1); // ENTRY IS EVICTED SO INCREMENT UNDERLYING COUNTER
                     }
                 }
             }
@@ -362,7 +365,7 @@ void CACHE::handle_writeback()
 
             if (cache_type == IS_LLC) {
                 llc_update_replacement_state(writeback_cpu, set, way, block[set][way].full_addr, WQ.entry[index].ip, 0, WQ.entry[index].type, 1);
-                pred_table_update(WQ.entry[index].ip,set,0); // WRITE HIT
+                pred_table_update(WQ.entry[index].ip,set,0); // WRITE HIT UPDATE PRED TABLE ENTRY
             }
             else
                 update_replacement_state(writeback_cpu, set, way, block[set][way].full_addr, WQ.entry[index].ip, 0, WQ.entry[index].type, 1);
@@ -441,7 +444,7 @@ void CACHE::handle_writeback()
 		      else
 			{
 			  add_mshr(&WQ.entry[index]);
-        pred_table_update(WQ.entry[index].ip,set,1); // MISS
+        pred_table_update(WQ.entry[index].ip,set,1); // WRITE BACK MISS UPDATE PRED TABLE ENTRY
 			  lower_level->add_rq(&WQ.entry[index]);
 			}
 		    }
@@ -562,11 +565,12 @@ void CACHE::handle_writeback()
                             writeback_packet.event_cycle = current_core_cycle[writeback_cpu];
 
                             lower_level->add_wq(&writeback_packet);
-                            if(set<TRACKER_SIZE && cache_type==IS_LLC){ // UPDATE ENTRIES 
+                            if(set<TRACKER_SIZE && cache_type==IS_LLC){ // UPDATE ENTRIES FEILD OF THE PRED TABLE
                               if(PRED_TABLE[TRACKSET[set].index].entry>0){
                                 PRED_TABLE[TRACKSET[set].index].entry--;
                                 // printf("%d\n",PRED_TABLE[TRACKSET[set].index].ip);
                               }
+                              pred_table_update(WQ.entry[index].ip,set,1); // ENTRY IS EVICTED SO INCREMENT THE UNDERLYING COUNTER
                             }
                         }
                     }
@@ -706,7 +710,7 @@ void CACHE::handle_read()
                 // update replacement policy
                 if (cache_type == IS_LLC) {
                     llc_update_replacement_state(read_cpu, set, way, block[set][way].full_addr, RQ.entry[index].ip, 0, RQ.entry[index].type, 1);
-                  pred_table_update(RQ.entry[index].ip,set,0); // HIT
+                  pred_table_update(RQ.entry[index].ip,set,0); // READ HIT DECREMENT THE UNDERLYING COUNTER
                 }
                 else
                     update_replacement_state(read_cpu, set, way, block[set][way].full_addr, RQ.entry[index].ip, 0, RQ.entry[index].type, 1);
@@ -740,11 +744,11 @@ void CACHE::handle_read()
 
                 // update prefetch stats and reset prefetch bit
                 if (block[set][way].prefetch) {
-                  if(AC_HIGH!=0 || AC_LOW!=0){
-                    if(cache_type==IS_L1D){
+                  if(AC_HIGH!=0 || AC_LOW!=0){ // PART 3
+                    if(cache_type==IS_L1D){ // UPDATE THE USEFUL COUNTER OF THE IP IN THE IP TRACKER L1D
                       l1d_prefetch_update(RQ.entry[index].ip,0);
                     }
-                    if(cache_type==IS_L2C){
+                    if(cache_type==IS_L2C){ // UPDATE THE USEFUL COUNTER OF THE IP IN THE IP TRACKER L2C
                       l2c_prefetch_update(RQ.entry[index].ip,0);
                     }
                   }
@@ -789,7 +793,7 @@ void CACHE::handle_read()
 		      else
 			{
 			  add_mshr(&RQ.entry[index]);
-        pred_table_update(RQ.entry[index].ip,set,1);
+        pred_table_update(RQ.entry[index].ip,set,1); // READ MISS DECREMENT THE UNDERLYING COUNTER
 			  if(lower_level)
 			    {
 			      lower_level->add_rq(&RQ.entry[index]);
@@ -1222,10 +1226,10 @@ void CACHE::fill_cache(uint32_t set, uint32_t way, PACKET *packet)
 #endif
     if (block[set][way].prefetch && (block[set][way].used == 0)){
       if(AC_HIGH != 0 || AC_LOW != 0){
-        if(cache_type==IS_L1D){
+        if(cache_type==IS_L1D){ // UPDATE THE USELESS COUNTER OF THE IP IN THE IP TRACKER L1D
           l1d_prefetch_update(packet->ip,1);
         }
-        if(cache_type==IS_L2C){
+        if(cache_type==IS_L2C){ // UPDATE THE USELESS COUNTER OF THE IP IN THE IP TRACKER L2C
           l2c_prefetch_update(packet->ip,1);
         }
       }

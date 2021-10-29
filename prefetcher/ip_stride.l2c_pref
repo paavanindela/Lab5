@@ -36,6 +36,7 @@ class IP_TRACKER {
     uint8_t prefetch_degree;
 
     int useful,useless;
+    // USEFUL and USELESS PREFETCHES FOR THIS PC 
 
     IP_TRACKER () {
         ip = 0;
@@ -78,13 +79,13 @@ void CACHE::l2c_prefetch_update(uint64_t ip,int type){
             break;
     }
     if(index !=-1 && index!= IP_TRACKER_COUNT){
-        if(type==0){
+        if(type==0){ // UPDATE USEFUL 
             trackers[index].useful++;
         }
-        if(type==1){
+        if(type==1){ // UPDATE USELESS
             trackers[index].useless++;
         }
-        l1d_prefetch_throttle(ip,index);
+        l1d_prefetch_throttle(ip,index); // CALL PREFETCH_THROTTLE TO CHANGE THE PREFETCH_DEGREE
     }
 }
 void CACHE::l2c_prefetcher_initialize() 
@@ -154,8 +155,8 @@ uint32_t CACHE::l2c_prefetcher_operate(uint64_t addr, uint64_t ip, uint8_t cache
     // stride more than once
     if (stride == trackers[index].last_stride) {
 
-        // do some prefetching
-        for (int i=0; i<PREFETCH_DEGREE; i++) {
+        // do some prefetching with the PREFETCH_DEGREE
+        for (int i=0; i<trackers[index].prefetch_degree; i++) {
             uint64_t pf_address = (cl_addr + (stride*(i+1))) << LOG2_BLOCK_SIZE;
 
             // only issue a prefetch if the prefetch address is in the same 4 KB page 
