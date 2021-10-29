@@ -237,6 +237,7 @@ class CACHE : public MEMORY {
              lru_victim(uint32_t cpu, uint64_t instr_id, uint32_t set, const BLOCK *current_set, uint64_t ip, uint64_t full_addr, uint32_t type);
 
     bool llc_bypass(uint64_t ip, uint64_t cache_line);
+    void pred_table_update(uint64_t ip,int set, int type);
 };
 
 #endif
