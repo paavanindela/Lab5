@@ -196,10 +196,10 @@ void CACHE::l1d_prefetcher_final_stats()
     cout << "CPU " << cpu << " L1D PC-based stride prefetcher final stats" << endl;
     uint64_t TOTAL_MISS = 0;
 
-    for (uint32_t i=0; i<NUM_TYPES; i++) {
-        TOTAL_MISS += sim_miss[cpu][i];
-    }
-    cout << "L1D PREFETCHER ACCURACY " << setw(10) << (1.0*pf_useful)/(pf_useful+pf_useless) << endl;
-    cout << "L1D PREFETCHER COVERAGE " << setw(10) << (1.0*pf_useful)/(TOTAL_MISS) << endl;
-    cout << "L1D PREFETCHER LATE " << setw(10)  << pf_late << endl;
+    //for (uint32_t i=0; i<NUM_TYPES; i++) {
+    //    TOTAL_MISS += sim_miss[cpu][i];
+    //}
+    //cout << "L1D PREFETCHER ACCURACY " << setw(10) << (1.0*pf_useful)/(pf_useful+pf_useless) << endl;
+    //cout << "L1D PREFETCHER COVERAGE " << setw(10) << (1.0*pf_useful)/(TOTAL_MISS) << endl;
+    //cout << "L1D PREFETCHER LATE " << setw(10)  << pf_late << endl;
 }
