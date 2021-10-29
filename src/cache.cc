@@ -2,7 +2,7 @@
 #include "set.h"
 
 uint64_t l2pf_access = 0;
-int pol = BYPASS_THRESHOLD-1;
+int pol = POLICY_THRESHOLD-1;
 class PC_PRED_TABLE {
   public:
     // the IP we're tracking
@@ -43,7 +43,7 @@ bool CACHE::llc_bypass(uint64_t ip, uint64_t cache_line){
     int way = get_way(cache_line,set);
     int index = -1; // GET THE PRED TABLE ENTRY
     for (index=0; index<TABLE_SIZE; index++) {
-      if (PRED_TABLE[index].ip == ip && PRED_TABLE[index].policy == pol/BYPASS_THRESHOLD)
+      if (PRED_TABLE[index].ip == ip && PRED_TABLE[index].policy == pol/POLICY_THRESHOLD)
         break;
     }  
     if(set < TRACKER_SIZE){ // TRACKER SET
@@ -59,29 +59,35 @@ bool CACHE::llc_bypass(uint64_t ip, uint64_t cache_line){
             PRED_TABLE[assign].cnt = BYPASS_THRESHOLD -1 ;
             PRED_TABLE[assign].entry = 1;
             PRED_TABLE[assign].ip = ip;
-            PRED_TABLE[assign].policy = pol/BYPASS_THRESHOLD;
+            PRED_TABLE[assign].policy = pol/POLICY_THRESHOLD;
             TRACKSET[set].cache_line = cache_line;
             TRACKSET[set].index = assign;
             index = assign;
             // printf("%d,%d,%d\n",ip,cache_line,index,pol/BYPASS_THRESHOLD);
           }
           else{   // PRED TABLE FULL
-            return false; // NO BYPASS
+            if(pol/POLICY_THRESHOLD==0){
+              return false;
+            }
+            else{
+              return true;
+            }
           }
         }
       } 
     }
-    if(index!=TABLE_SIZE && way < TRACKER_SIZE){ // PRESENT IN PRED TABLE TRACKER SET
+    if(index!=TABLE_SIZE ){ // PRESENT IN PRED TABLE 
+    // WORKS FOR BOTH TRACKER SETS AND FOLLOWER SETS
       return PRED_TABLE[index].cnt >= BYPASS_THRESHOLD; // ACCORDINGLY BYPASS
     }
-    if(index!=TABLE_SIZE && way >= TRACKER_SIZE){ // PRESENT IN PRED TABLE FOLLOWER SET
-      if(pol/BYPASS_THRESHOLD==0){
+    // if(index==TABLE_SIZE){ // NOT PRESENT IN PRED TABLE USE GLOBAL COUNTER
+      if(pol/POLICY_THRESHOLD==0){
         return false;
       }
       else{
         return true;
       }
-    }
+    // }
   }
   return false; // NO BYPASS
 }  
@@ -89,21 +95,24 @@ bool CACHE::llc_bypass(uint64_t ip, uint64_t cache_line){
 void CACHE::pred_table_update(uint64_t ip,int set, int type){
   int index = -1; // GET THE PRED TABLE ENTRY
     for (index=0; index<TABLE_SIZE; index++) {
-      if (PRED_TABLE[index].ip == ip && PRED_TABLE[index].policy == pol/BYPASS_THRESHOLD)
+      if (PRED_TABLE[index].ip == ip && PRED_TABLE[index].policy == pol/POLICY_THRESHOLD)
         break;
     }  
-  if(index!=TABLE_SIZE && set < TRACKER_SIZE && TRACKSET[set].index==index){
+  if(index!=TABLE_SIZE && set < TRACKER_SIZE && TRACKSET[set].index==index){ // USED TRACKER SET HERE
     if(type==0){
       if(PRED_TABLE[index].cnt > 0)
         PRED_TABLE[index].cnt--; //HIT, DECREMENT
-      pol--;
+      if(pol>0)  
+        pol--;
     }
     if(type==1){
-      if(PRED_TABLE[index].cnt < 2*BYPASS_THRESHOLD)
+      if(PRED_TABLE[index].cnt < 2*BYPASS_THRESHOLD-1)
         PRED_TABLE[index].cnt++; //MISS, INCREMENT 
-      pol++;
+      if(pol<2*POLICY_THRESHOLD-1)
+        pol++;
     }
-    PRED_TABLE[index].entry++;
+    if(PRED_TABLE[index].entry<2*POLICY_THRESHOLD-1) // 9 BIT COUNTER
+      PRED_TABLE[index].entry++;
     // printf("%d,%d\n",ip,PRED_TABLE[index].cnt);
   }
 }
