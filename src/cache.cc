@@ -796,7 +796,7 @@ void CACHE::handle_read()
 		      else
 			{
 			  add_mshr(&RQ.entry[index]);
-        pred_table_update(RQ.entry[index].ip,set,1,way); // READ MISS DECREMENT THE UNDERLYING COUNTER
+        pred_table_update(RQ.entry[index].ip,set,1,way); // READ MISS INCREMENT THE UNDERLYING COUNTER
 			  if(lower_level)
 			    {
 			      lower_level->add_rq(&RQ.entry[index]);
