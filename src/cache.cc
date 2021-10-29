@@ -63,7 +63,7 @@ bool CACHE::llc_bypass(uint64_t ip, uint64_t cache_line){
             TRACKSET[set].cache_line = cache_line;
             TRACKSET[set].index = assign;
             index = assign;
-            printf("%d,%d,%d\n",ip,cache_line,index);
+            // printf("%d,%d,%d\n",ip,cache_line,index,pol/BYPASS_THRESHOLD);
           }
           else{   // PRED TABLE FULL
             return false; // NO BYPASS
@@ -71,10 +71,10 @@ bool CACHE::llc_bypass(uint64_t ip, uint64_t cache_line){
         }
       } 
     }
-    if(index!=TABLE_SIZE){ // PRESENT IN PRED TABLE
+    if(index!=TABLE_SIZE && way < TRACKER_SIZE){ // PRESENT IN PRED TABLE TRACKER SET
       return PRED_TABLE[index].cnt >= BYPASS_THRESHOLD; // ACCORDINGLY BYPASS
     }
-    else{
+    if(index!=TABLE_SIZE && way >= TRACKER_SIZE){ // PRESENT IN PRED TABLE FOLLOWER SET
       if(pol/BYPASS_THRESHOLD==0){
         return false;
       }
@@ -94,15 +94,17 @@ void CACHE::pred_table_update(uint64_t ip,int set, int type){
     }  
   if(index!=TABLE_SIZE && set < TRACKER_SIZE && TRACKSET[set].index==index){
     if(type==0){
-      PRED_TABLE[index].cnt--; //HIT, DECREMENT
+      if(PRED_TABLE[index].cnt > 0)
+        PRED_TABLE[index].cnt--; //HIT, DECREMENT
       pol--;
     }
     if(type==1){
-      PRED_TABLE[index].cnt++; //MISS, INCREMENT 
+      if(PRED_TABLE[index].cnt < 2*BYPASS_THRESHOLD)
+        PRED_TABLE[index].cnt++; //MISS, INCREMENT 
       pol++;
     }
     PRED_TABLE[index].entry++;
-    printf("%d,%d\n",ip,PRED_TABLE[index].cnt);
+    // printf("%d,%d\n",ip,PRED_TABLE[index].cnt);
   }
 }
 
@@ -214,8 +216,11 @@ void CACHE::handle_fill()
                     writeback_packet.event_cycle = current_core_cycle[fill_cpu];
 
                     lower_level->add_wq(&writeback_packet);
-                    if(set<TRACKER_SIZE){ // UPDATE ENTRIES 
-                      PRED_TABLE[TRACKSET[set].index].entry--;
+                    if(set<TRACKER_SIZE && cache_type==IS_LLC){ // UPDATE ENTRIES 
+                      if(PRED_TABLE[TRACKSET[set].index].entry>0){
+                        PRED_TABLE[TRACKSET[set].index].entry--;
+                        // printf("%d\n",PRED_TABLE[TRACKSET[set].index].ip);
+                      }
                     }
                 }
             }
@@ -548,8 +553,11 @@ void CACHE::handle_writeback()
                             writeback_packet.event_cycle = current_core_cycle[writeback_cpu];
 
                             lower_level->add_wq(&writeback_packet);
-                            if(set<TRACKER_SIZE){ // UPDATE ENTRIES 
-                              PRED_TABLE[TRACKSET[set].index].entry--;
+                            if(set<TRACKER_SIZE && cache_type==IS_LLC){ // UPDATE ENTRIES 
+                              if(PRED_TABLE[TRACKSET[set].index].entry>0){
+                                PRED_TABLE[TRACKSET[set].index].entry--;
+                                // printf("%d\n",PRED_TABLE[TRACKSET[set].index].ip);
+                              }
                             }
                         }
                     }

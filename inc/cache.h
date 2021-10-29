@@ -11,7 +11,7 @@ extern uint32_t PAGE_TABLE_LATENCY, SWAP_LATENCY;
 #define AC_LOW 0
 #define TABLE_SIZE 1024
 #define BYPASS_THRESHOLD 32
-#define TRACKER_SIZE 4
+#define TRACKER_SIZE 128
 #define LLC_BYPASS 1
 // CACHE TYPE
 #define IS_ITLB 0
