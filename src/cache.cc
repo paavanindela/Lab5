@@ -3,6 +3,88 @@
 
 uint64_t l2pf_access = 0;
 
+class PC_PRED_TABLE {
+  public:
+    // the IP we're tracking
+    uint64_t ip;
+    // the underlying 6 bit counter
+    uint8_t cnt;
+    // the number of cache lines attached
+    uint16_t entry;
+    PC_PRED_TABLE () {
+        ip = 0;
+        cnt = BYPASS_THRESHOLD-1;
+        entry = 0;
+    };
+};
+
+class TRACKERSET{
+    public:
+    // index of the Ip in the PRED_TABLE
+        int index;
+    // Cache Line that this tracker set tracks
+        uint64_t cache_line;
+    TRACKERSET(){
+        index = -1;
+        cache_line = 0;
+    };
+};
+
+PC_PRED_TABLE PRED_TABLE[TABLE_SIZE];
+TRACKERSET TRACKSET[TRACKER_SIZE];
+
+bool CACHE::llc_bypass(uint64_t ip, uint64_t cache_line){
+  if(cache_type==IS_LLC){
+    int set = get_set(cache_line);
+    int way = get_way(cache_line,set);
+    int index = -1; // GET THE PRED TABLE ENTRY
+    for (index=0; index<TABLE_SIZE; index++) {
+      if (PRED_TABLE[index].ip == ip)
+        break;
+    }  
+    if(set < TRACKER_SIZE){ // TRACKER SET
+      if(way==NUM_WAY){ // CACHE MISS
+        if(index==TABLE_SIZE){ // ENTRY NOT PRESENT IN PRED_TABLE
+          int assign = -1;
+          for(assign=0;assign<TABLE_SIZE;assign++){
+            if(PRED_TABLE[assign].entry==0){
+              break;
+            }
+          }
+          if(assign!=TABLE_SIZE){
+            PRED_TABLE[assign].cnt = BYPASS_THRESHOLD -1 ;
+            PRED_TABLE[assign].entry = 1;
+            PRED_TABLE[assign].ip = ip;
+            TRACKSET[set].cache_line = cache_line;
+            TRACKSET[set].index = assign;
+            index = assign;
+            printf("%d,%d,%d\n",ip,cache_line,index);
+          }
+          else{   // PRED TABLE FULL
+            return false; // NO BYPASS
+          }
+        }
+        else{ // ENTRY PRESENT IN PRED_TABLE
+          if(TRACKSET[set].cache_line==cache_line){ // REUSED
+            PRED_TABLE[TRACKSET[set].index].cnt++;
+          }
+          else{ // NEW CACHE LINE SO ENTTRIES INCREASE AND COUNTER DECREASES
+            PRED_TABLE[index].cnt--;
+            PRED_TABLE[index].entry++;
+          }
+        }
+      } 
+      else{ // CACHE HIT
+        
+      }
+    }
+    if(index!=TABLE_SIZE){ // WORKS FOR BOTH FOLLOWER SETS AND TRACKER SETS
+      return PRED_TABLE[index].cnt >= BYPASS_THRESHOLD; // ACCORDINGLY BYPASS
+    }
+  }
+  return false; // NO BYPASS
+}  
+
 void CACHE::handle_fill()
 {
     // handle fill
@@ -27,8 +109,7 @@ void CACHE::handle_fill()
         else
             way = find_victim(fill_cpu, MSHR.entry[mshr_index].instr_id, set, block[set], MSHR.entry[mshr_index].ip, MSHR.entry[mshr_index].full_addr, MSHR.entry[mshr_index].type);
 
-#ifdef LLC_BYPASS
-        if ((cache_type == IS_LLC) && (way == LLC_WAY)) { // this is a bypass that does not fill the LLC
+        if (LLC_BYPASS==1 && (cache_type == IS_LLC) && llc_bypass(MSHR.entry[mshr_index].ip,MSHR.entry[mshr_index].address)) { // this is a bypass that does not fill the LLC
 
             // update replacement policy
             if (cache_type == IS_LLC) {
@@ -78,7 +159,6 @@ void CACHE::handle_fill()
 
             return; // return here, no need to process further in this function
         }
-#endif
 
         uint8_t  do_fill = 1;
 

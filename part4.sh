@@ -25,6 +25,7 @@ NORMAL=$(tput sgr0)
 # Change the threshold
 sed -i.bak 's/\<AC_HIGH 0\>/AC_HIGH '${HIGH}'/g' inc/cache.h
 sed -i.bak 's/\<AC_LOW 0\>/AC_LOW '${LOW}'/g' inc/cache.h
+sed -i.bak 's/\<LLC_BYPASS 1\>/LLC_BYPASS 0/g' inc/cache.h
 # Sanity check
 if [ ! -f ./branch/${BRANCH}.bpred ]; then
     echo "[ERROR] Cannot find branch predictor"
@@ -132,6 +133,7 @@ mv bin/champsim bin/${BINARY_NAME}
 sed -i.bak 's/\<NUM_CPUS '${NUM_CORE}'\>/NUM_CPUS 1/g' inc/champsim.h
 sed -i.bak 's/\<AC_HIGH '${HIGH}'\>/AC_HIGH 0/g' inc/cache.h
 sed -i.bak 's/\<AC_LOW '${LOW}'\>/AC_LOW 0/g' inc/cache.h
+sed -i.bak 's/\<LLC_BYPASS 0\>/LLC_BYPASS 1/g' inc/cache.h
 #sed -i.bak 's/\<DRAM_CHANNELS 2\>/DRAM_CHANNELS 1/g' inc/champsim.h
 #sed -i.bak 's/\<DRAM_CHANNELS_LOG2 1\>/DRAM_CHANNELS_LOG2 0/g' inc/champsim.h
 
