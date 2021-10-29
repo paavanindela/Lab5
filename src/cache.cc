@@ -142,8 +142,8 @@ void CACHE::handle_fill()
         }
         else
             way = find_victim(fill_cpu, MSHR.entry[mshr_index].instr_id, set, block[set], MSHR.entry[mshr_index].ip, MSHR.entry[mshr_index].full_addr, MSHR.entry[mshr_index].type);
-
-        if (LLC_BYPASS==1 &&( ((cache_type == IS_LLC) && llc_bypass(MSHR.entry[mshr_index].ip,MSHR.entry[mshr_index].address)) || (way == LLC_WAY))) { // this is a bypass that does not fill the LLC
+#ifdef LLC_BYPASS
+        if (LLC_BYPASS == 1 && ( ((cache_type == IS_LLC) && llc_bypass(MSHR.entry[mshr_index].ip,MSHR.entry[mshr_index].address)) || (way == LLC_WAY))) { // this is a bypass that does not fill the LLC
           // LLC BYPASS IMPLEMENTED HERE PREVIOUSLY
             // update replacement policy
             if (cache_type == IS_LLC) {
@@ -193,7 +193,7 @@ void CACHE::handle_fill()
 
             return; // return here, no need to process further in this function
         }
-
+#endif
         uint8_t  do_fill = 1;
 
         // is this dirty?

@@ -54,13 +54,13 @@ IP_TRACKER trackers[IP_TRACKER_COUNT];
 void CACHE::l2c_prefetch_throttle(uint64_t ip,int index){
     if(index !=-1 && index!= IP_TRACKER_COUNT && (trackers[index].useful+trackers[index].useless) > 0){
         float accuracy = (1.0*trackers[index].useful)/(trackers[index].useful+trackers[index].useless);
-        if(accuracy >= AC_HIGH){
+        if(accuracy >= AC_HIGH){ // INCREASE PREFETCH_DEGREE TO INCREASE TIMELINESS
             trackers[index].prefetch_degree++;
         }
-        if(accuracy < AC_HIGH && accuracy >=AC_LOW){
+        if(accuracy < AC_HIGH && accuracy >=AC_LOW){ // IDEAL CASE NO CHANGE
             trackers[index].prefetch_degree;  
         }
-        if(accuracy < AC_LOW){
+        if(accuracy < AC_LOW){ // SAVE BANDWIDTH BY DECREASING PREFETCH_DEGREE
             trackers[index].prefetch_degree--; 
         }
         if(trackers[index].prefetch_degree<=0) {

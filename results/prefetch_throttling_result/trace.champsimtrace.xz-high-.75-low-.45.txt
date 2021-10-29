@@ -12,12 +12,12 @@ CPU 0 runs ./traces//trace.champsimtrace.xz
 CPU 0 Bimodal branch predictor
 CPU 0 L1D IP-based stride prefetcher
 CPU 0 L2C IP-based stride prefetcher
-Heartbeat CPU 0 instructions: 10000001 cycles: 4431359 heartbeat IPC: 2.25664 cumulative IPC: 2.25664 (Simulation time: 0 hr 1 min 17 sec) 
+Heartbeat CPU 0 instructions: 10000001 cycles: 4431359 heartbeat IPC: 2.25664 cumulative IPC: 2.25664 (Simulation time: 0 hr 1 min 36 sec) 
 
-Warmup complete CPU 0 instructions: 10000001 cycles: 4431359 (Simulation time: 0 hr 1 min 17 sec) 
+Warmup complete CPU 0 instructions: 10000001 cycles: 4431359 (Simulation time: 0 hr 1 min 36 sec) 
 
-Heartbeat CPU 0 instructions: 20000000 cycles: 48092398 heartbeat IPC: 0.229037 cumulative IPC: 0.229037 (Simulation time: 0 hr 3 min 37 sec) 
-Finished CPU 0 instructions: 10000003 cycles: 43661040 cumulative IPC: 0.229037 (Simulation time: 0 hr 3 min 37 sec) 
+Heartbeat CPU 0 instructions: 20000000 cycles: 48092398 heartbeat IPC: 0.229037 cumulative IPC: 0.229037 (Simulation time: 0 hr 3 min 46 sec) 
+Finished CPU 0 instructions: 10000003 cycles: 43661040 cumulative IPC: 0.229037 (Simulation time: 0 hr 3 min 46 sec) 
 
 ChampSim completed all CPUs
 
